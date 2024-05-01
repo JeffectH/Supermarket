@@ -7,7 +7,7 @@ namespace Supermarket
     {
         static void Main(string[] args)
         {
-            Shop shop = new Shop();
+            Shop shop = new Shop(5, 700, 1500, 4, 10);
 
             shop.Work();
         }
@@ -17,12 +17,11 @@ namespace Supermarket
     {
         private int _money = 0;
         private Queue<Client> _clients = new Queue<Client>();
-        private int _numberClients = 5;
-        private int _minAmountClientMoney = 0;
-        private int _maxAmountClientMoney = 50;
-        private int _minNumberProducts = 4;
-        private int _maxNumberProducts = 10;
-        private List<Product> _products = new List<Product>()
+        private List<Product> _products;
+
+        public Shop(int numberClients = 5, int minAmountClientMoney, int maxAmountClientMoney, int minNumberProducts, int maxNumberProducts)
+        {
+            _products = new List<Product>()
                     {
                     new Product("Молоко", 85),
                     new Product("Чай", 75),
@@ -36,18 +35,7 @@ namespace Supermarket
                     new Product("Сыр", 220),
                     };
 
-        public Shop()
-        {
-            CreateNewClients(_numberClients);
-        }
-
-        public void CreateNewClients(int count)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                _clients.Enqueue(new Client(UserUtils.GenerateRandomNumber(_minAmountClientMoney, _maxAmountClientMoney),
-                    UserUtils.GenerateRandomNumber(_minNumberProducts, _maxNumberProducts)));
-            }
+            CreateNewClients(numberClients, minAmountClientMoney, maxAmountClientMoney, minNumberProducts, maxNumberProducts);
         }
 
         public void Work()
@@ -96,6 +84,15 @@ namespace Supermarket
             Console.WriteLine($"Все покупки завершены. Итоговая выручка составила: {_money}");
             Console.ReadKey();
         }
+
+        private void CreateNewClients(int count, int minAmountClientMoney, int maxAmountClientMoney, int minNumberProducts, int maxNumberProducts)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                _clients.Enqueue(new Client(UserUtils.GenerateRandomNumber(minAmountClientMoney, maxAmountClientMoney),
+                    UserUtils.GenerateRandomNumber(minNumberProducts, maxNumberProducts)));
+            }
+        }
     }
 
     public class Client
@@ -107,11 +104,13 @@ namespace Supermarket
         {
             _money = money;
             _shoppingCart = new ShoppingCart(numberProducts);
+            ShoppingCart = _shoppingCart;
         }
 
         public ShoppingCart ShoppingCart { get; private set; }
 
-        public bool CanPayProducts() => _money >= _shoppingCart.CalculateCostProducts();
+        public bool CanPayProducts() => _money >=
+            _shoppingCart.CalculateCostProducts();
 
         public int Pay()
         {
@@ -131,7 +130,8 @@ namespace Supermarket
             _numberProducts = numberProducts;
         }
 
-        public Product GetRemovedProduct() => _removedProduct;
+        public Product GetRemovedProduct() =>
+            _removedProduct;
 
         public void ShowProducts()
         {
@@ -173,9 +173,11 @@ namespace Supermarket
             _products.RemoveAt(numberProduct);
         }
 
-        public int GetNumberProducts() => _products.Count;
+        public int GetNumberProducts() =>
+            _products.Count;
 
-        private Product GetProduct(List<Product> products) => products[UserUtils.GenerateRandomNumber(0, _products.Count)];
+        private Product GetProduct(List<Product> products) =>
+            products[UserUtils.GenerateRandomNumber(0, _products.Count)];
     }
 
     public class Product
@@ -194,6 +196,7 @@ namespace Supermarket
     {
         private static Random s_random = new Random();
 
-        public static int GenerateRandomNumber(int min, int max) => s_random.Next(min, max);
+        public static int GenerateRandomNumber(int min, int max) =>
+            s_random.Next(min, max);
     }
 }

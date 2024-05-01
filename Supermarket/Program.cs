@@ -19,7 +19,7 @@ namespace Supermarket
         private Queue<Client> _clients = new Queue<Client>();
         private List<Product> _products;
 
-        public Shop(int numberClients = 5, int minAmountClientMoney, int maxAmountClientMoney, int minNumberProducts, int maxNumberProducts)
+        public Shop(int numberClients, int minAmountClientMoney, int maxAmountClientMoney, int minNumberProducts, int maxNumberProducts)
         {
             _products = new List<Product>()
                     {
@@ -47,34 +47,33 @@ namespace Supermarket
 
                 Console.WriteLine($"Колличество клиентов в очереди: {_clients.Count}\n");
 
-                newClient.ShoppingCart.Fill(_products);
+                newClient.Fill(_products);
 
                 Console.WriteLine("Продукты которые собирается купить клиент:");
-                newClient.ShoppingCart.ShowProducts();
+                newClient.ShowProducts();
 
-                Console.WriteLine($"\nИтоговая стоимость корзины:{newClient.ShoppingCart.CalculateCostProducts()}");
+                Console.WriteLine($"\nИтоговая стоимость корзины:{newClient.CalculateCostProducts()}");
 
                 while (newClient.CanPayProducts() == false)
                 {
                     Console.WriteLine("Клиент НЕможет оплатить весь товар! Необходимо выложить продукты.");
                     Console.ReadKey();
-                    newClient.ShoppingCart.LayOutRandomProduct();
-                    Console.WriteLine($"Удален продукт: {newClient.ShoppingCart.GetRemovedProduct().Name}\n");
+                    newClient.LayOutRandomProduct();
+                    Console.WriteLine($"Удален продукт: {newClient.GetRemovedProduct().Name}\n");
                 }
 
-                if (newClient.ShoppingCart.GetNumberProducts() != 0)
+                if (newClient.GetNumberProducts() != 0)
                 {
-                    Console.WriteLine("Клиент может оплатить весь товар!");
-                    Console.WriteLine("Итоговая корзина:");
-                    newClient.ShoppingCart.ShowProducts();
-                    Console.WriteLine($"\nИтоговая стоимость корзины:{newClient.ShoppingCart.CalculateCostProducts()}");
+                    Console.WriteLine("\nКлиент может оплатить весь товар!");
+                    Console.WriteLine("\nИтоговая корзина:");
+                    newClient.ShowProducts();
+                    Console.WriteLine($"\nИтоговая стоимость корзины:{newClient.CalculateCostProducts()}");
                     _money += newClient.Pay();
                     Console.WriteLine("Покупка прошла успешно!");
-
                 }
                 else
                 {
-                    Console.WriteLine("Клиенту не хватило денег на покупку!");
+                    Console.WriteLine("\nКлиенту не хватило денег на покупку!");
                 }
 
                 Console.ReadKey();
@@ -97,37 +96,23 @@ namespace Supermarket
 
     public class Client
     {
+        private List<Product> _products = new List<Product>();
+        private Product _removedProduct;
         private int _money;
-        private ShoppingCart _shoppingCart;
+        private int _numberProducts;
 
         public Client(int money, int numberProducts)
         {
             _money = money;
-            _shoppingCart = new ShoppingCart(numberProducts);
-            ShoppingCart = _shoppingCart;
+            _numberProducts = numberProducts;
         }
 
-        public ShoppingCart ShoppingCart { get; private set; }
-
-        public bool CanPayProducts() => _money >=
-            _shoppingCart.CalculateCostProducts();
+        public bool CanPayProducts() => _money >= CalculateCostProducts();
 
         public int Pay()
         {
-            _money -= _shoppingCart.CalculateCostProducts();
-            return _shoppingCart.CalculateCostProducts();
-        }
-    }
-
-    public class ShoppingCart
-    {
-        private List<Product> _products = new List<Product>();
-        private int _numberProducts;
-        private Product _removedProduct;
-
-        public ShoppingCart(int numberProducts)
-        {
-            _numberProducts = numberProducts;
+            _money -= CalculateCostProducts();
+            return CalculateCostProducts();
         }
 
         public Product GetRemovedProduct() =>
@@ -177,7 +162,7 @@ namespace Supermarket
             _products.Count;
 
         private Product GetProduct(List<Product> products) =>
-            products[UserUtils.GenerateRandomNumber(0, _products.Count)];
+            products[UserUtils.GenerateRandomNumber(0, products.Count)];
     }
 
     public class Product

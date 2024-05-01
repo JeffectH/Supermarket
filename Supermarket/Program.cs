@@ -42,33 +42,33 @@ namespace Supermarket
         {
             while (_clients.Count > 0)
             {
-                Client newClient = _clients.Dequeue();
+                Client client = _clients.Dequeue();
                 Console.WriteLine("Баланс:" + _money + "\n");
 
                 Console.WriteLine($"Колличество клиентов в очереди: {_clients.Count}\n");
 
-                newClient.Fill(_products);
+                client.Fill(new List<Product>(_products));
 
                 Console.WriteLine("Продукты которые собирается купить клиент:");
-                newClient.ShowProducts();
+                client.ShowProducts();
 
-                Console.WriteLine($"\nИтоговая стоимость корзины:{newClient.CalculateCostProducts()}");
+                Console.WriteLine($"\nИтоговая стоимость корзины:{client.CalculateCostProducts()}");
 
-                while (newClient.CanPayProducts() == false)
+                while (client.CanPayProducts() == false)
                 {
                     Console.WriteLine("Клиент НЕможет оплатить весь товар! Необходимо выложить продукты.");
                     Console.ReadKey();
-                    newClient.LayOutRandomProduct();
-                    Console.WriteLine($"Удален продукт: {newClient.GetRemovedProduct().Name}\n");
+                    client.LayOutRandomProduct();
+                    Console.WriteLine($"Удален продукт: {client.GetRemovedProduct.Name}\n");
                 }
 
-                if (newClient.GetNumberProducts() != 0)
+                if (client.GetNumberProducts != 0)
                 {
                     Console.WriteLine("\nКлиент может оплатить весь товар!");
                     Console.WriteLine("\nИтоговая корзина:");
-                    newClient.ShowProducts();
-                    Console.WriteLine($"\nИтоговая стоимость корзины:{newClient.CalculateCostProducts()}");
-                    _money += newClient.Pay();
+                    client.ShowProducts();
+                    Console.WriteLine($"\nИтоговая стоимость корзины:{client.CalculateCostProducts()}");
+                    _money += client.Pay();
                     Console.WriteLine("Покупка прошла успешно!");
                 }
                 else
@@ -107,16 +107,17 @@ namespace Supermarket
             _numberProducts = numberProducts;
         }
 
+        public int GetNumberProducts { get { return _products.Count; } }
+        public Product GetRemovedProduct { get { return _removedProduct; } }
+
         public bool CanPayProducts() => _money >= CalculateCostProducts();
 
         public int Pay()
         {
-            _money -= CalculateCostProducts();
-            return CalculateCostProducts();
+            int costProducts = CalculateCostProducts();
+            _money -= costProducts;
+            return costProducts;
         }
-
-        public Product GetRemovedProduct() =>
-            _removedProduct;
 
         public void ShowProducts()
         {
@@ -133,7 +134,7 @@ namespace Supermarket
         {
             for (int i = 0; i < _numberProducts; i++)
             {
-                _products.Add(GetProduct(products));
+                _products.Add(GetRandomProduct(products));
             }
         }
 
@@ -158,10 +159,7 @@ namespace Supermarket
             _products.RemoveAt(numberProduct);
         }
 
-        public int GetNumberProducts() =>
-            _products.Count;
-
-        private Product GetProduct(List<Product> products) =>
+        private Product GetRandomProduct(List<Product> products) =>
             products[UserUtils.GenerateRandomNumber(0, products.Count)];
     }
 

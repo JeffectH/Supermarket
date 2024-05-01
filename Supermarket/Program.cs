@@ -58,11 +58,10 @@ namespace Supermarket
                 {
                     Console.WriteLine("Клиент НЕможет оплатить весь товар! Необходимо выложить продукты.");
                     Console.ReadKey();
-                    client.LayOutRandomProduct();
-                    Console.WriteLine($"Удален продукт: {client.GetRemovedProduct.Name}\n");
+                    Console.WriteLine($"Удален продукт: {client.GetRemovedRandomProduct().Name}\n");
                 }
 
-                if (client.GetNumberProducts != 0)
+                if (client.ProductsCount != 0)
                 {
                     Console.WriteLine("\nКлиент может оплатить весь товар!");
                     Console.WriteLine("\nИтоговая корзина:");
@@ -97,7 +96,6 @@ namespace Supermarket
     public class Client
     {
         private List<Product> _products = new List<Product>();
-        private Product _removedProduct;
         private int _money;
         private int _numberProducts;
 
@@ -107,8 +105,7 @@ namespace Supermarket
             _numberProducts = numberProducts;
         }
 
-        public int GetNumberProducts { get { return _products.Count; } }
-        public Product GetRemovedProduct { get { return _removedProduct; } }
+        public int ProductsCount => _products.Count;
 
         public bool CanPayProducts() => _money >= CalculateCostProducts();
 
@@ -150,13 +147,13 @@ namespace Supermarket
             return cost;
         }
 
-        public void LayOutRandomProduct()
+        public Product GetRemovedRandomProduct()
         {
             int numberProduct = UserUtils.GenerateRandomNumber(0, _products.Count);
-
-            _removedProduct = _products[numberProduct];
-
+            Product removedProduct = _products[numberProduct];
             _products.RemoveAt(numberProduct);
+
+            return removedProduct;
         }
 
         private Product GetRandomProduct(List<Product> products) =>

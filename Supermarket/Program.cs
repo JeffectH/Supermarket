@@ -7,8 +7,22 @@ namespace Supermarket
     {
         static void Main(string[] args)
         {
-            Warehouse warehouse = new Warehouse
-                    (new List<Product>()
+            Shop shop = new Shop();
+
+            shop.Work();
+        }
+    }
+
+    public class Shop
+    {
+        private int _money = 0;
+        private Queue<Client> _clients = new Queue<Client>();
+        private int _numberClients = 5;
+        private int _minAmountClientMoney = 0;
+        private int _maxAmountClientMoney = 50;
+        private int _minNumberProducts = 4;
+        private int _maxNumberProducts = 10;
+        private List<Product> _products = new List<Product>()
                     {
                     new Product("Молоко", 85),
                     new Product("Чай", 75),
@@ -20,39 +34,19 @@ namespace Supermarket
                     new Product("Мыло", 45),
                     new Product("Зубная паста", 175),
                     new Product("Сыр", 220),
-                    });
+                    };
 
-            Shop shop = new Shop(warehouse);
-
-            shop.Work();
-        }
-    }
-
-    public class Shop
-    {
-        private int _money = 0;
-        private Queue<Client> _clients = new Queue<Client>();
-        private int _numberClients = 5;
-        private int _minAmountClientMoney = 700;
-        private int _maxAmountClientMoney = 1500;
-        private int _minNumberProducts = 4;
-        private int _maxNumberProducts = 10;
-        private Warehouse _warehouse;
-
-        public Shop(Warehouse warehouse)
+        public Shop()
         {
-            Random random = new Random();
-
-            _warehouse = warehouse;
-            CreateNewClients(_numberClients, random);
+            CreateNewClients(_numberClients);
         }
 
-        public void CreateNewClients(int count, Random random)
+        public void CreateNewClients(int count)
         {
             for (int i = 0; i < count; i++)
             {
-                _clients.Enqueue(new Client(random.Next(_minAmountClientMoney, _maxAmountClientMoney),
-                                            random.Next(_minNumberProducts, _maxNumberProducts)));
+                _clients.Enqueue(new Client(UserUtils.GenerateRandomNumber(_minAmountClientMoney, _maxAmountClientMoney),
+                    UserUtils.GenerateRandomNumber(_minNumberProducts, _maxNumberProducts)));
             }
         }
 
@@ -65,35 +59,34 @@ namespace Supermarket
 
                 Console.WriteLine($"Колличество клиентов в очереди: {_clients.Count}\n");
 
-                newClient.FillShoppingCart(_warehouse);
+                newClient.ShoppingCart.Fill(_products);
 
                 Console.WriteLine("Продукты которые собирается купить клиент:");
-                newClient.ShowProducts();
+                newClient.ShoppingCart.ShowProducts();
 
-                Console.WriteLine($"\nИтоговая стоимость корзины:{newClient.CalculateCostProducts()}");
+                Console.WriteLine($"\nИтоговая стоимость корзины:{newClient.ShoppingCart.CalculateCostProducts()}");
 
-                if (newClient.CanPayProducts())
+                while (newClient.CanPayProducts() == false)
+                {
+                    Console.WriteLine("Клиент НЕможет оплатить весь товар! Необходимо выложить продукты.");
+                    Console.ReadKey();
+                    newClient.ShoppingCart.LayOutRandomProduct();
+                    Console.WriteLine($"Удален продукт: {newClient.ShoppingCart.GetRemovedProduct().Name}\n");
+                }
+
+                if (newClient.ShoppingCart.GetNumberProducts() != 0)
                 {
                     Console.WriteLine("Клиент может оплатить весь товар!");
+                    Console.WriteLine("Итоговая корзина:");
+                    newClient.ShoppingCart.ShowProducts();
+                    Console.WriteLine($"\nИтоговая стоимость корзины:{newClient.ShoppingCart.CalculateCostProducts()}");
                     _money += newClient.Pay();
                     Console.WriteLine("Покупка прошла успешно!");
+
                 }
                 else
                 {
-                    while (newClient.CanPayProducts() == false)
-                    {
-                        Console.WriteLine("Клиент неможет оплатить весь товар! Необходимо выложить продукты.");
-                        Console.ReadKey();
-                        newClient.LayOutProduct();
-                        Console.WriteLine($"Удален продукт: {newClient.GetRemovedProduct().Name}\n");
-                    }
-
-                    Console.WriteLine("Клиент может оплатить весь товар!");
-                    Console.WriteLine("Итоговая корзина:");
-                    newClient.ShowProducts();
-                    Console.WriteLine($"\nИтоговая стоимость корзины:{newClient.CalculateCostProducts()}");
-                    _money += newClient.Pay();
-                    Console.WriteLine("Покупка прошла успешно!");
+                    Console.WriteLine("Клиенту не хватило денег на покупку!");
                 }
 
                 Console.ReadKey();
@@ -116,42 +109,14 @@ namespace Supermarket
             _shoppingCart = new ShoppingCart(numberProducts);
         }
 
-        public void ShowProducts()
-        {
-            _shoppingCart.ShowProducts();
-        }
+        public ShoppingCart ShoppingCart { get; private set; }
 
-        public void FillShoppingCart(Warehouse warehouse)
-        {
-            _shoppingCart.AddProducts(warehouse);
-        }
-
-        public int CalculateCostProducts()
-        {
-            return _shoppingCart.CalculateCostProducts();
-        }
-
-        public bool CanPayProducts()
-        {
-            return _money >= _shoppingCart.CalculateCostProducts();
-        }
+        public bool CanPayProducts() => _money >= _shoppingCart.CalculateCostProducts();
 
         public int Pay()
         {
             _money -= _shoppingCart.CalculateCostProducts();
             return _shoppingCart.CalculateCostProducts();
-        }
-
-        public void LayOutProduct()
-        {
-            Random random = new Random();
-
-            _shoppingCart.LayOutRandomProduct(random);
-        }
-
-        public Product GetRemovedProduct()
-        {
-            return _shoppingCart.GetRemovedProduct();
         }
     }
 
@@ -166,10 +131,7 @@ namespace Supermarket
             _numberProducts = numberProducts;
         }
 
-        public Product GetRemovedProduct()
-        {
-            return _removedProduct;
-        }
+        public Product GetRemovedProduct() => _removedProduct;
 
         public void ShowProducts()
         {
@@ -182,13 +144,11 @@ namespace Supermarket
             }
         }
 
-        public void AddProducts(Warehouse warehouse)
+        public void Fill(List<Product> products)
         {
-            Random random = new Random();
-
             for (int i = 0; i < _numberProducts; i++)
             {
-                _products.Add(warehouse.GetProduct(random));
+                _products.Add(GetProduct(products));
             }
         }
 
@@ -204,14 +164,18 @@ namespace Supermarket
             return cost;
         }
 
-        public void LayOutRandomProduct(Random random)
+        public void LayOutRandomProduct()
         {
-            int numberProduct = random.Next(0, _products.Count);
+            int numberProduct = UserUtils.GenerateRandomNumber(0, _products.Count);
 
             _removedProduct = _products[numberProduct];
 
             _products.RemoveAt(numberProduct);
         }
+
+        public int GetNumberProducts() => _products.Count;
+
+        private Product GetProduct(List<Product> products) => products[UserUtils.GenerateRandomNumber(0, _products.Count)];
     }
 
     public class Product
@@ -226,18 +190,10 @@ namespace Supermarket
         public int Price { get; private set; }
     }
 
-    public class Warehouse
+    class UserUtils
     {
-        private List<Product> _products;
+        private static Random s_random = new Random();
 
-        public Warehouse(List<Product> products)
-        {
-            _products = products;
-        }
-
-        public Product GetProduct(Random random)
-        {
-            return _products[random.Next(0, _products.Count)];
-        }
+        public static int GenerateRandomNumber(int min, int max) => s_random.Next(min, max);
     }
 }
